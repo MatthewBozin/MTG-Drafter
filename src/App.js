@@ -1,12 +1,10 @@
-import logo from './logo.svg';
 import './App.css';
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Cards from './Cards';
 
 function App() {
 
   const r = c => Math.floor(Math.random() * c);
-  const s = array => array[r(array.length)];
 
   const [cardSet, setCardSet] = useState("SNC");
 
@@ -50,29 +48,23 @@ function App() {
     setCards({...cards});
   }
 
-  const load = () => {
+  const load = async () => {
     for (let i = 1; i <= 6; i++) {
-      fetch(`https://api.magicthegathering.io/v1/cards?set=${cardSet}&page=${i}>`)
-        .then(res => res.json())
-        .then(data => {
-          ["Mythic", "Rare", "Uncommon", "Common"].forEach((rarity) => {
-            cards[rarity.toLowerCase()] = [...cards[rarity.toLowerCase()], ...data.cards.filter(card => card.rarity === rarity)]
-            })
-            setCards({...cards});
-            console.log(cards);
-          })
-        .catch(err => console.log(err))
+      const res = await fetch(`https://api.magicthegathering.io/v1/cards?set=${cardSet}&page=${i}>`);
+      const data = await res.json();
+      ["Mythic", "Rare", "Uncommon", "Common"].forEach((rarity) => {
+      cards[rarity.toLowerCase()] = [...cards[rarity.toLowerCase()], ...data.cards.filter(card => card.rarity === rarity)]
+      })
+      setCards({...cards});
+      console.log(cards);
     } 
   }
 
   const selectCard = (key) => {
     cards.playerDeck.push(cards.packs[cards.activepack].splice(key, 1)[0])
     cards.packs.forEach((pack, index) => {if (index !== cards.activepack) pack.pop()});
-    console.log(cards.activepack);
-    console.log(cards.packs.length);
     if (cards.activepack === cards.packs.length - 1) {cards.activepack = 0} else {cards.activepack++}
     setCards({...cards});
-    console.log(cards);
   }
 
   const sets = ['SNC', 'NEO', 'VOW'];
@@ -92,9 +84,9 @@ function App() {
           <button onClick={() => {buildPacks()}}>Create Draft Pool</button>
           <button onClick={() => {draftPack()}}>Start Draft</button>
         </nav>
-        <h2>Draft cards</h2>
+        {cards.activepack !== null && <h2>Draft cards</h2>}
         <Cards cards={cards.packs[cards.activepack]} method={selectCard}></Cards>
-        <h2>Your Cards</h2>
+        {cards.activepack !== null && <h2>Your cards</h2>}
         <Cards cards={cards.playerDeck}></Cards>
       </header>
     </div>
